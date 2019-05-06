@@ -30,6 +30,7 @@ package EventCalendar;
 	
 	@SuppressWarnings("unused")
 	public class Calendar {
+		
 	    static JLabel lblMonth, lblYear; 
 	    static JButton btnPrev, btnNext, btnAddEvent, btnDelEvent;
 	    static JTable tblCalendar;
@@ -38,10 +39,10 @@ package EventCalendar;
 	    static Container pane;
 	    static DefaultTableModel mtblCalendar; 
 	    static JScrollPane stblCalendar; 
-	    static JPanel pnlCalendar ,pnlEvents, pnlAllEvents;
-	    static int realYear, realMonth, realDay, currentYear, currentMonth, currentDay;
+	    static JPanel pnlCalendar ,pnlEvents, pnlAllEvents; 
 	    static JTextField txtdata;
 	    static JTextArea events,allEvents;
+	    static int realYear, realMonth, realDay, currentYear, currentMonth, currentDay;
 	    static int selectedDay,selectedMonth,selectedYear;
 	    static String newLine = "\n";
 	    static String eventValue;
@@ -81,7 +82,8 @@ package EventCalendar;
 	        //make text areas non-editable
 	        allEvents.setEditable(false);
 	        events.setEditable(false);
-	        
+	        allEvents.setLineWrap(true);
+	        events.setLineWrap(true);
 	      
 	        //Set border
 	        pnlCalendar.setBorder(BorderFactory.createTitledBorder("Calendar"));
@@ -226,24 +228,27 @@ package EventCalendar;
 	        		(JTable table, Object value, boolean selected,
 	        		boolean focused, int row, int column){
 	            super.getTableCellRendererComponent(table, value, selected, focused, row, column);
+
 	            if (column == 0 || column == 6){ //Week-end
 	                setBackground(Color.ORANGE);
 	            }
 	            else{ //Week
 	                setBackground(Color.WHITE);
 	            }
+	          
 	            if (value != null){
+	            	//set actual day to gray
 	                if (Integer.parseInt(value.toString()) == realDay && currentMonth == realMonth
 	                												&& currentYear == realYear){ //Today
-	                    setBackground(Color.GRAY);
+	                	setBackground(Color.GRAY);
 	                }
+	                //set days with events to yellow
+	                if(findEvent(value,currentMonth+1,currentYear)) {
+	                	setBackground(Color.YELLOW);
+	                }
+	                
 	            }
-	            
-	          
-	            setBorder(null);
-	            setForeground(Color.BLACK);
-	            
-	            //allows user to select date to add event to
+	          //allows user to select date to add event to
 	            if(selected && value!=null) {
 	            	setBackground(Color.LIGHT_GRAY);
 	                events.setText(null);
@@ -254,7 +259,13 @@ package EventCalendar;
 	            	displayEvents(selectedDay,selectedMonth,selectedYear);
 	            	isCellSelected=true;
 	            }
-	         
+	            
+	            setBorder(null);
+	            setForeground(Color.BLACK);
+	            
+	            
+	            
+	            	         
 	            return this;
 	        }
 	        }
@@ -322,6 +333,8 @@ package EventCalendar;
 	        	}
 	        }
 	    }
+	    
+	    
 	    //creates new event
 	    public static void createEvent() {
 	    	Event singleEvent = new Event();
@@ -336,6 +349,7 @@ package EventCalendar;
 	    	}
 	    	
 	    	else {
+	    		
 	    	String getValue = txtdata.getText();
 	    	eventValue = getValue;
 	    	singleEvent.setEventName(eventValue);
@@ -397,12 +411,10 @@ package EventCalendar;
 	    		monthArr[i] = list.get(i).getEventDay();
 	    		yearArr[i] = list.get(i).getEventDay();
 	    	}
-	    	Arrays.sort(dayArr);
-	    	Arrays.sort(monthArr);
-	    	Arrays.sort(yearArr);
+	    	Collections.sort(list, new SortEvent());
 	        allEvents.append("Your up coming events: "+ newLine);
 	    	for(int i =0;i<list.size();i++) {
-	    		allEvents.append(("* "+list.get(i).getEventName()+ "     [" 
+	    		allEvents.append(("- "+list.get(i).getEventName()+ "     [" 
 	    				+ list.get(i).getEventMonth()
 	    				+ "/" + list.get(i).getEventDay() 
 	    				+ "/" + list.get(i).getEventYear() 
@@ -411,19 +423,44 @@ package EventCalendar;
 	    }
 	    //checks if event exists on specific day
 		public static boolean findEvent(Object value,int month,int year) {
-			int day = (Integer) value;
+			int day = Integer.parseInt(value.toString());
 			boolean hasEvent = false;
 			for(int i =0;i<list.size();i++) {
-	    		if(list.get(i).getEventDay() == day &&
-	    			list.get(i).getEventMonth() ==month &&
-	    			list.get(i).getEventYear()==year) {
-	    			hasEvent = true;
-	    		}
-	    		
+			if(list.get(i).getEventDay()== day &&
+					list.get(i).getEventMonth()== month &&
+			        list.get(i).getEventYear()== year){
+				hasEvent= true;
+				}
 			}
+			
 			return hasEvent;
 		}
 		
 	}
+
+	class SortEvent implements Comparator<Event> 
+	{ 
+		public int compare(Event a , Event b) {
+			
+			int dayCompare = Integer.valueOf(a.eventDay).compareTo(Integer.valueOf(b.eventDay));
+			int monthCompare = Integer.valueOf(a.eventMonth).compareTo(Integer.valueOf(b.eventMonth));
+			int yearCompare = Integer.valueOf(a.eventYear).compareTo(Integer.valueOf(b.eventYear));
+			
+			if(yearCompare ==0) {
+				if(monthCompare ==0) {
+					return dayCompare;
+				}
+				else {
+					return monthCompare;
+				}
+			}
+			else {
+				return yearCompare;
+			}
+			
+		} 
+		
+	}
+	
 
 
